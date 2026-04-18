@@ -3,659 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carter's Guide: Optimization</title>
+    <title>AP Calc BC: Ultimate Series Engine</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$']],
-                displayMath: [['$$', '$$']]
-            },
-            svg: {
-                fontCache: 'global'
-            }
-        };
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
     <style>
         :root {
-            --primary-blue: #013f7c; /* Custom banner and accent color */
-            --primary-hover: #012a54; /* Darker shade for hover effects */
-            --bg-color: #f7f9fa;
-            --card-bg: #ffffff;
-            --text-main: #21242c;
-            --text-muted: #5f6368;
-            --border-color: #e0e0e0;
-            --correct-green: #008a00;
-            --incorrect-red: #d93025;
+            --bg: #1a1b26;
+            --fg: #a9b1d6;
+            --primary: #7aa2f7;
+            --success: #9ece6a;
+            --warning: #e0af68;
+            --error: #f7768e;
+            --surface: #24283b;
+            --surface-hover: #414868;
+            --code-bg: #15161e;
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            font-family: 'Fira Code', 'Consolas', monospace;
+            background-color: var(--bg);
+            color: var(--fg);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            
-            /* Disables text selection and forces the arrow cursor for an app-like feel */
-            user-select: none;
-            -webkit-user-select: none; 
-            cursor: default; 
         }
 
-        /* Full-Width Colored Banner */
-        .top-banner {
-            background-color: var(--primary-blue);
-            color: #ffffff;
-            padding: 20px 40px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .banner-content {
-            width: 100%; 
-            display: flex;
-            justify-content: flex-start; /* Forces content to the absolute left */
-            align-items: center; 
-            gap: 24px;
-        }
-
-        .site-logo {
-            height: 90px; 
-            width: auto; 
-            object-fit: contain; 
-            flex-shrink: 0; 
-            border-radius: 0; /* Keeps your Photoshop edges perfectly square */
-        }
-
-        .header-text {
-            text-align: left;
-        }
-
-        .top-banner h1 {
-            margin-top: 0;
-            margin-bottom: 0.2rem;
-            font-size: 2.5rem;
-            color: #ffffff;
-        }
-
-        .top-banner p {
-            color: #d1e2f3; 
-            font-size: 1.1rem;
-            margin: 0;
-        }
-
-        /* Main Content Container */
-        .container {
-            max-width: 800px;
-            margin: 32px auto 60px;
-            padding: 0 20px;
-        }
-
-        h2 {
-            font-size: 1.5rem;
-            color: var(--text-main);
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 8px;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
-            padding: 32px;
-            margin-bottom: 24px;
-        }
-
-        .lesson-steps {
-            background-color: #e8f0fe;
-            border-left: 4px solid var(--primary-blue);
-            padding: 16px 24px;
-            border-radius: 0 8px 8px 0;
-            margin: 20px 0;
-        }
-
-        .lesson-steps ol {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .lesson-steps li {
-            margin-bottom: 8px;
-        }
-
-        /* Visualization Styles */
-        .visualization-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        canvas {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: #fafafa;
-            margin-bottom: 16px;
-        }
-
-        .slider-container {
-            width: 100%;
-            max-width: 400px;
+        h1 {
+            color: var(--primary);
             text-align: center;
+            border-bottom: 2px solid var(--surface);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
         }
 
-        input[type=range] {
-            width: 100%;
-            margin: 10px 0;
-        }
-
-        .live-stats {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary-blue);
-            margin-top: 10px;
-        }
-
-        /* Practice Problem Styles */
-        .problem-container {
-            border: 1px solid var(--border-color);
+        #problem-container {
+            background-color: var(--surface);
+            padding: 2.5rem;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background-color: #fff;
-        }
-
-        .input-group {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            min-height: 150px;
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 16px;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
-        input[type="text"] {
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 1rem;
-            width: 120px;
-            font-family: 'Inter', sans-serif;
-            
-            /* Turns text selection and the I-beam cursor back on for input boxes */
-            user-select: auto;
-            -webkit-user-select: auto;
-            cursor: text; 
-        }
-
-        button {
-            background-color: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--primary-blue);
-            border: 1px solid var(--primary-blue);
-        }
-
-        .btn-secondary:hover {
-            background-color: #e8f0fe;
-        }
-
-        .note {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 4px;
+        .prompt-text {
+            font-size: 1.2rem;
+            color: var(--warning);
+            margin-bottom: 1rem;
             display: block;
         }
 
-        .feedback {
-            font-weight: 600;
-            margin-left: 10px;
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
-        .feedback.correct {
-            color: var(--correct-green);
+        button {
+            background-color: var(--surface);
+            color: var(--fg);
+            border: 1px solid var(--surface-hover);
+            padding: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: all 0.2s;
         }
 
-        .feedback.incorrect {
-            color: var(--incorrect-red);
+        button:hover:not(:disabled) {
+            background-color: var(--surface-hover);
+            border-color: var(--primary);
+            transform: translateY(-2px);
         }
 
-        .solution-box {
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        button.correct { background-color: var(--success); color: #1a1b26; border-color: var(--success); opacity: 1; }
+        button.incorrect { background-color: var(--error); color: #1a1b26; border-color: var(--error); opacity: 1; }
+
+        #feedback-panel {
+            background-color: var(--surface);
+            padding: 2rem;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
             display: none;
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-left: 4px solid var(--text-muted);
-            border-radius: 0 6px 6px 0;
-            overflow-x: auto;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.3s ease-in;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-section {
+            margin-bottom: 1.5rem;
+            background: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .feedback-section h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--surface-hover);
+            padding-bottom: 0.5rem;
+        }
+
+        .checklist {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .checklist li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .checklist li::before {
+            content: "✓";
+            color: var(--success);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        #next-btn {
+            background-color: var(--primary);
+            color: var(--bg);
+            font-size: 1.2rem;
+            padding: 1.2rem;
+            display: none;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        #next-btn:hover { background-color: #8db0f8; transform: none; }
     </style>
 </head>
 <body>
 
-<header class="top-banner">
-    <div class="banner-content">
-        <img src="logo.png" alt="Optimization Site Logo" class="site-logo">
-        <div class="header-text">
-            <h1>AP Calculus: Optimization</h1>
-            
-        </div>
-    </div>
-</header>
-
-<div class="container">
-    <main>
-        <section class="card">
-            <h2>Introduction to Optimization</h2>
-            <p>Optimization problems are one of the most powerful real-world applications of differential calculus. Whether a manufacturer wants to minimize the cost of producing a cylindrical can, or a farmer wants to maximize the grazing area of a fenced field, the mathematical goal remains the same: finding the <strong>absolute extrema</strong> (maximum or minimum) of a function over a specific domain.</p>
-            
-            <p>By finding where the derivative of our function equals zero or is undefined (our <strong>critical points</strong>), we can pinpoint the exact values that optimize our scenario.</p>
-
-            <div class="lesson-steps">
-                <strong>Steps For Optimization:</strong>
-                <ol>
-                    <li><strong>Draw a diagram</strong> and label all known and unknown variables.</li>
-                    <li><strong>Identify the primary equation</strong> (the quantity to be maximized or minimized).</li>
-                    <li><strong>Identify the secondary equation</strong> (the constraint that links your variables).</li>
-                    <li>Substitute the constraint into the primary equation to express it in terms of a <strong>single variable</strong>.</li>
-                    <li>Determine the <strong>feasible domain</strong> (what are the practical limits on your variable?).</li>
-                    <li><strong>Differentiate</strong> the primary equation and find the critical points (where $f'(x) = 0$ or is undefined).</li>
-                    <li><strong>Justify</strong> that your critical point is indeed the absolute extremum using the First Derivative Test, Second Derivative Test, or the Extreme Value Theorem (checking endpoints).</li>
-                </ol>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>Visualization</h2>
-            <p>Let's visualize a classic problem: finding the maximum area of a rectangle inscribed under the parabola $y = 9 - x^2$ and bounded by the x-axis. The width of the rectangle is $2x$ and the height is $y$. Therefore, Area $A = 2x(9 - x^2)$.</p>
-            
-            <p>Adjust the slider to change the $x$-value and observe how the area changes. Watch for the moment the area reaches its peak!</p>
-
-            <div class="visualization-container">
-                <canvas id="optCanvas" width="500" height="350"></canvas>
-                
-                <div class="slider-container">
-                    <label for="xSlider" style="font-weight: 500;">Adjust x-value: <span id="xDisplay">1.50</span></label>
-                    <input type="range" id="xSlider" min="0" max="3" step="0.01" value="1.5">
-                    <div class="live-stats" id="areaDisplay">Area = 20.25</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>Interactive Practice</h2>
-            <p>Apply the standard steps to solve the following optimization problems. For each problem, find the requested value.</p>
-            
-            <div id="practice-container">
-                </div>
-        </section>
-    </main>
-</div>
-
-<script>
-    /* =========================================
-       VISUALIZATION (CANVAS) LOGIC
-       ========================================= */
-    const canvas = document.getElementById('optCanvas');
-    const ctx = canvas.getContext('2d');
-    const slider = document.getElementById('xSlider');
-    const xDisplay = document.getElementById('xDisplay');
-    const areaDisplay = document.getElementById('areaDisplay');
-
-    const width = canvas.width;
-    const height = canvas.height;
-    const originX = width / 2;
-    const originY = height - 40; 
-    const scale = 30; 
-
-    function draw() {
-        ctx.clearRect(0, 0, width, height);
-        
-        const xVal = parseFloat(slider.value);
-        const yVal = 9 - (xVal * xVal);
-        const area = 2 * xVal * yVal;
-
-        // Draw grid & axes
-        ctx.beginPath();
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.lineWidth = 1;
-        ctx.moveTo(0, originY);
-        ctx.lineTo(width, originY);
-        ctx.moveTo(originX, 0);
-        ctx.lineTo(originX, height);
-        ctx.stroke();
-
-        ctx.fillStyle = '#5f6368';
-        ctx.font = '12px Inter';
-        ctx.fillText('x', width - 15, originY - 10);
-        ctx.fillText('y', originX + 10, 15);
-
-        // Draw Parabola
-        ctx.beginPath();
-        ctx.strokeStyle = '#21242c';
-        ctx.lineWidth = 2;
-        for (let px = 0; px <= width; px++) {
-            let mathX = (px - originX) / scale;
-            let mathY = 9 - (mathX * mathX);
-            let py = originY - (mathY * scale);
-            if (px === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-        }
-        ctx.stroke();
-
-        // Draw Inscribed Rectangle matching new primary color
-        const rectCanvasX = originX - (xVal * scale);
-        const rectCanvasY = originY - (yVal * scale);
-        const rectCanvasWidth = 2 * xVal * scale;
-        const rectCanvasHeight = yVal * scale;
-
-        ctx.fillStyle = 'rgba(1, 63, 124, 0.2)'; 
-        ctx.fillRect(rectCanvasX, rectCanvasY, rectCanvasWidth, rectCanvasHeight);
-        
-        ctx.strokeStyle = '#013f7c';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(rectCanvasX, rectCanvasY, rectCanvasWidth, rectCanvasHeight);
-
-        // Draw Highlighted Dot
-        const dotCanvasX = originX + (xVal * scale);
-        const dotCanvasY = originY - (yVal * scale);
-        ctx.beginPath();
-        ctx.arc(dotCanvasX, dotCanvasY, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = '#d93025'; 
-        ctx.fill();
-
-        xDisplay.textContent = xVal.toFixed(2);
-        areaDisplay.textContent = `Area = ${area.toFixed(2)}`;
-    }
-
-    slider.addEventListener('input', draw);
-    draw(); 
-
-    /* =========================================
-       PRACTICE PROBLEM LOGIC & DATA
-       ========================================= */
+    <h1>AP Calc BC: Series Analysis Engine</h1>
     
-    const problems = [
-        {
-            id: 1,
-            text: "A piece of cardboard of size 20 x 15 inches is used to make an open-top box by cutting squares of side length $x$ from the corners and folding up the sides. Find the value of $x$ that maximizes the volume.",
-            answer: 2.83,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                The volume of the box is $V = x(20 - 2x)(15 - 2x)$.</p>
-                <p><strong>Step 2: Expand the equation.</strong><br>
-                $V = x(300 - 40x - 30x + 4x^2) = 4x^3 - 70x^2 + 300x$.</p>
-                <p><strong>Step 3: Feasible Domain.</strong><br>
-                Since side lengths must be positive, $x > 0$ and $15 - 2x > 0$, giving a domain of $(0, 7.5)$.</p>
-                <p><strong>Step 4: Differentiate and find critical points.</strong><br>
-                $V' = 12x^2 - 140x + 300$.<br>
-                Set $V' = 0$ to find critical points:<br>
-                $12x^2 - 140x + 300 = 0$ (divide by 4)<br>
-                $3x^2 - 35x + 75 = 0$.</p>
-                <p><strong>Step 5: Quadratic Formula.</strong><br>
-                $$x = \\frac{35 \\pm \\sqrt{(-35)^2 - 4(3)(75)}}{2(3)} = \\frac{35 \\pm \\sqrt{1225 - 900}}{6} = \\frac{35 \\pm \\sqrt{325}}{6}$$
-                $$x \\approx \\frac{35 + 18.027}{6} \\approx 8.83 \\quad \\text{(Outside domain)}$$
-                $$x \\approx \\frac{35 - 18.027}{6} \\approx 2.83 \\quad \\text{(Inside domain)}$$</p>
-                <p><strong>Final Answer:</strong> $x \\approx 2.83$ inches.</p>
-            `
-        },
-        {
-            id: 2,
-            text: "A farmer has 400 feet of fencing to enclose a rectangular area bordering a straight river. No fencing is required along the river. Find the dimensions that maximize the enclosed area. (Enter the maximum area in square feet).",
-            answer: 20000,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                Let $x$ be the width (perpendicular to the river) and $y$ be the length (parallel to the river).<br>
-                Primary: Area $A = xy$.<br>
-                Secondary (Constraint): $2x + y = 400$.</p>
-                <p><strong>Step 2: Express in one variable.</strong><br>
-                $y = 400 - 2x$<br>
-                $A = x(400 - 2x) = 400x - 2x^2$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                $A' = 400 - 4x$.<br>
-                Set $A' = 0$: $400 - 4x = 0 \\Rightarrow 4x = 400 \\Rightarrow x = 100$.</p>
-                <p><strong>Step 4: Find maximum area.</strong><br>
-                If $x = 100$, then $y = 400 - 2(100) = 200$.<br>
-                Maximum Area $= 100 \\times 200 = 20000$.<br>
-                (Since $A'' = -4 < 0$, this is a local and absolute maximum by the Second Derivative Test).</p>
-                <p><strong>Final Answer:</strong> $20000$</p>
-            `
-        },
-        {
-            id: 3,
-            text: "A cylindrical can must be made to hold a volume of $250\\pi$ cubic centimeters. Find the radius of the can that minimizes the total surface area.",
-            answer: 5,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                Primary: Surface Area $S = 2\\pi r^2 + 2\\pi rh$.<br>
-                Secondary (Constraint): Volume $V = \\pi r^2 h = 250\\pi$.</p>
-                <p><strong>Step 2: Express in one variable.</strong><br>
-                Solving for $h$: $h = \\frac{250\\pi}{\\pi r^2} = \\frac{250}{r^2}$.<br>
-                Substitute into $S$: $S = 2\\pi r^2 + 2\\pi r\\left(\\frac{250}{r^2}\\right) = 2\\pi r^2 + \\frac{500\\pi}{r}$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                $S' = 4\\pi r - \\frac{500\\pi}{r^2}$.<br>
-                Set $S' = 0$:<br>
-                $4\\pi r = \\frac{500\\pi}{r^2}$<br>
-                $4\\pi r^3 = 500\\pi \\Rightarrow r^3 = 125 \\Rightarrow r = 5$.</p>
-                <p><strong>Final Answer:</strong> $r = 5$ cm.</p>
-            `
-        },
-        {
-            id: 4,
-            text: "Find the $x$-coordinate of the point on the curve $y = \\sqrt{x}$ that is closest to the point $(4.5, 0)$.",
-            answer: 4,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                Distance formula: $D = \\sqrt{(x - 4.5)^2 + (y - 0)^2}$.<br>
-                To minimize distance, we can minimize the square of the distance, $L = D^2$.<br>
-                Primary: $L = (x - 4.5)^2 + y^2$.<br>
-                Secondary (Constraint): $y = \\sqrt{x}$.</p>
-                <p><strong>Step 2: Express in one variable.</strong><br>
-                Substitute $y$: $L = (x - 4.5)^2 + (\\sqrt{x})^2 = (x - 4.5)^2 + x$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                $L' = 2(x - 4.5)(1) + 1 = 2x - 9 + 1 = 2x - 8$.<br>
-                Set $L' = 0$: $2x - 8 = 0 \\Rightarrow 2x = 8 \\Rightarrow x = 4$.</p>
-                <p><strong>Final Answer:</strong> $x = 4$.</p>
-            `
-        },
-        {
-            id: 5,
-            text: "A piece of cardboard of size 24 x 24 inches is used to make an open-top box by cutting squares of side length $x$ from the corners and folding up the sides. Find the value of $x$ that maximizes the volume.",
-            answer: 4,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                The volume of the box is $V = x(24 - 2x)(24 - 2x) = x(24 - 2x)^2$.</p>
-                <p><strong>Step 2: Feasible Domain.</strong><br>
-                Since length cannot be negative, $x > 0$ and $24 - 2x > 0$, so $0 < x < 12$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                Using the product and chain rules:<br>
-                $V' = 1 \\cdot (24 - 2x)^2 + x \\cdot 2(24 - 2x)(-2)$<br>
-                $V' = (24 - 2x)^2 - 4x(24 - 2x)$.<br>
-                Factor out $(24 - 2x)$:<br>
-                $V' = (24 - 2x)[(24 - 2x) - 4x] = (24 - 2x)(24 - 6x)$.</p>
-                <p><strong>Step 4: Solve for zero.</strong><br>
-                $24 - 2x = 0 \\Rightarrow x = 12$ (outside domain).<br>
-                $24 - 6x = 0 \\Rightarrow x = 4$ (inside domain).</p>
-                <p><strong>Final Answer:</strong> $x = 4$ inches.</p>
-            `
-        },
-        {
-            id: 6,
-            text: "A farmer has 600 feet of fencing to enclose a rectangular area bordering a straight river. No fencing is required along the river. Find the dimensions that maximize the enclosed area. (Enter the maximum area in square feet).",
-            answer: 45000,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                Primary: Area $A = xy$.<br>
-                Secondary: $2x + y = 600$.</p>
-                <p><strong>Step 2: Express in one variable.</strong><br>
-                $y = 600 - 2x$<br>
-                $A = x(600 - 2x) = 600x - 2x^2$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                $A' = 600 - 4x$.<br>
-                Set $A' = 0 \\Rightarrow 4x = 600 \\Rightarrow x = 150$.</p>
-                <p><strong>Step 4: Find maximum area.</strong><br>
-                If $x = 150$, then $y = 600 - 2(150) = 300$.<br>
-                Maximum Area $= 150 \\times 300 = 45000$.</p>
-                <p><strong>Final Answer:</strong> $45000$</p>
-            `
-        },
-        {
-            id: 7,
-            text: "A cylindrical can must be made to hold a volume of $16\\pi$ cubic centimeters. Find the radius of the can that minimizes the total surface area.",
-            answer: 2,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                Primary: Surface Area $S = 2\\pi r^2 + 2\\pi rh$.<br>
-                Secondary: Volume $V = \\pi r^2 h = 16\\pi$.</p>
-                <p><strong>Step 2: Express in one variable.</strong><br>
-                $h = \\frac{16\\pi}{\\pi r^2} = \\frac{16}{r^2}$.<br>
-                $S = 2\\pi r^2 + 2\\pi r\\left(\\frac{16}{r^2}\\right) = 2\\pi r^2 + \\frac{32\\pi}{r}$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                $S' = 4\\pi r - \\frac{32\\pi}{r^2}$.<br>
-                Set $S' = 0$: $4\\pi r = \\frac{32\\pi}{r^2} \\Rightarrow 4\\pi r^3 = 32\\pi \\Rightarrow r^3 = 8 \\Rightarrow r = 2$.</p>
-                <p><strong>Final Answer:</strong> $r = 2$ cm.</p>
-            `
-        },
-        {
-            id: 8,
-            text: "Find the $x$-coordinate of the point on the curve $y = \\sqrt{x}$ that is closest to the point $(2.5, 0)$.",
-            answer: 2,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                To minimize distance, minimize the square of the distance: $L = (x - 2.5)^2 + y^2$.<br>
-                Secondary constraint: $y = \\sqrt{x}$.</p>
-                <p><strong>Step 2: Express in one variable.</strong><br>
-                $L = (x - 2.5)^2 + (\\sqrt{x})^2 = (x - 2.5)^2 + x$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                $L' = 2(x - 2.5)(1) + 1 = 2x - 5 + 1 = 2x - 4$.<br>
-                Set $L' = 0$: $2x - 4 = 0 \\Rightarrow 2x = 4 \\Rightarrow x = 2$.</p>
-                <p><strong>Final Answer:</strong> $x = 2$.</p>
-            `
-        },
-        {
-            id: 9,
-            text: "A piece of cardboard of size 12 x 12 inches is used to make an open-top box by cutting squares of side length $x$ from the corners and folding up the sides. Find the value of $x$ that maximizes the volume.",
-            answer: 2,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                $V = x(12 - 2x)(12 - 2x) = x(12 - 2x)^2$.<br>
-                Domain: $0 < x < 6$.</p>
-                <p><strong>Step 2: Differentiate.</strong><br>
-                $V' = 1 \\cdot (12 - 2x)^2 + x \\cdot 2(12 - 2x)(-2) = (12 - 2x)^2 - 4x(12 - 2x)$.<br>
-                Factor: $V' = (12 - 2x)(12 - 2x - 4x) = (12 - 2x)(12 - 6x)$.</p>
-                <p><strong>Step 3: Find critical points.</strong><br>
-                $12 - 2x = 0 \\Rightarrow x = 6$ (outside feasible domain).<br>
-                $12 - 6x = 0 \\Rightarrow x = 2$.</p>
-                <p><strong>Final Answer:</strong> $x = 2$ inches.</p>
-            `
-        },
-        {
-            id: 10,
-            text: "A farmer has 100 feet of fencing to enclose a rectangular area bordering a straight river. No fencing is required along the river. Find the dimensions that maximize the enclosed area. (Enter the maximum area in square feet).",
-            answer: 1250,
-            solution: `
-                <p><strong>Step 1: Identify equations.</strong><br>
-                Primary: Area $A = xy$.<br>
-                Secondary: $2x + y = 100$.</p>
-                <p><strong>Step 2: Express in one variable.</strong><br>
-                $y = 100 - 2x$<br>
-                $A = x(100 - 2x) = 100x - 2x^2$.</p>
-                <p><strong>Step 3: Differentiate and find critical points.</strong><br>
-                $A' = 100 - 4x$.<br>
-                Set $A' = 0 \\Rightarrow 4x = 100 \\Rightarrow x = 25$.</p>
-                <p><strong>Step 4: Find maximum area.</strong><br>
-                If $x = 25$, then $y = 100 - 2(25) = 50$.<br>
-                Maximum Area $= 25 \\times 50 = 1250$.</p>
-                <p><strong>Final Answer:</strong> $1250$</p>
-            `
+    <div id="problem-container">
+        </div>
+
+    <div class="grid" id="options-grid">
+        </div>
+
+    <div id="feedback-panel">
+        <h2 id="feedback-title" style="margin-top: 0;"></h2>
+        <div id="feedback-content"></div>
+        <button id="next-btn" onclick="loadNextProblem()">Execute Next Problem()</button>
+    </div>
+
+    <script>
+        const categories = [
+            "nth-Term Test", "Geometric Series", "p-Series Test", 
+            "Integral Test", "Direct Comparison", "Limit Comparison", 
+            "Alternating Series (AST)", "Ratio Test", "Root Test", 
+            "Telescoping Series", "Alt. Series Error Bound", "Taylor Series Manipulation"
+        ];
+
+        // Advanced Database with FRQ Checklists and Exam Traps
+        const problems = [
+            {
+                prompt: "Determine the convergence of:",
+                series: "\\sum_{n=1}^{\\infty} \\frac{(-1)^n}{n}",
+                correct: "Alternating Series (AST)",
+                pattern: "The explicit presence of (-1)^n triggers AST immediately. The non-alternating component is just 1/n.",
+                frqChecklist: [
+                    "Define a_n = 1/n (the positive, non-alternating part).",
+                    "State that a_n > 0 for all n >= 1.",
+                    "Show a_{n+1} <= a_n to prove it is strictly decreasing.",
+                    "Show \\lim_{n \\to \\infty} a_n = 0.",
+                    "Conclude: 'Converges by the Alternating Series Test.'"
+                ],
+                traps: "CONDITIONAL CONVERGENCE TRAP! If asked 'Does this converge absolutely or conditionally?', you must state it converges conditionally because its absolute value form (1/n) is a divergent harmonic p-series.",
+                customFails: {}
+            },
+            {
+                prompt: "Find the Radius of Convergence for the Power Series:",
+                series: "\\sum_{n=1}^{\\infty} \\frac{(x-3)^n}{n \\cdot 2^n}",
+                correct: "Ratio Test",
+                pattern: "Any time you have a Power Series (contains an 'x' raised to the nth power) mixed with other terms, you MUST use the Ratio Test to find the interior of the interval of convergence.",
+                frqChecklist: [
+                    "Set up the absolute value limit: \\lim_{n \\to \\infty} | \\frac{a_{n+1}}{a_n} |.",
+                    "Simplify exponents and factorials carefully.",
+                    "Set the resulting limit strictly less than 1: |x-3|/2 < 1.",
+                    "Solve the inequality to find Radius R = 2."
+                ],
+                traps: "ENDPOINT TRAP! The Ratio Test tells you it converges on (1, 5), but the Ratio Test is INCONCLUSIVE at exactly x=1 and x=5. You must manually plug x=1 and x=5 back into the original series and test those specific series using AST or LCT.",
+                customFails: {
+                    "Root Test": "While there is an nth power, the isolated 'n' in the denominator makes the Root Test extremely messy here. Ratio is standard protocol for Power Series."
+                }
+            },
+            {
+                prompt: "What is the maximum error if we use the first 4 terms to approximate:",
+                series: "\\sum_{n=1}^{\\infty} \\frac{(-1)^n}{n!}",
+                correct: "Alt. Series Error Bound",
+                pattern: "The prompt explicitly asks for an 'error' or 'remainder' of an alternating series. Do not test for convergence; use the error bound theorem.",
+                frqChecklist: [
+                    "Verify the series is alternating, decreasing, and converges to 0.",
+                    "Identify the requested partial sum (S_4).",
+                    "State the Alternating Series Error Bound theorem: |Error| <= |a_{n+1}|.",
+                    "Calculate the magnitude of the 5th term: 1/5! = 1/120."
+                ],
+                traps: "Do not include the (-1)^n in your error bound answer. Error is a magnitude (absolute value). Also, ensure you are plugging in n=5, not n=4.",
+                customFails: {
+                    "Ratio Test": "The question isn't asking IF it converges (we know it does, it's e^-1). It's asking for the ERROR of a partial sum."
+                }
+            },
+            {
+                prompt: "Determine the convergence of:",
+                series: "\\sum_{n=1}^{\\infty} \\frac{3n^2 - n}{n^5 + 4}",
+                correct: "Limit Comparison",
+                pattern: "It's a messy rational function (polynomial over polynomial). For large n, the lower-degree terms (-n and +4) don't matter. It behaves like 3n^2 / n^5.",
+                frqChecklist: [
+                    "Choose a known comparison series: b_n = 1/n^3.",
+                    "State that b_n is a convergent p-series (p=3 > 1).",
+                    "Set up the limit: \\lim_{n \\to \\infty} (a_n / b_n).",
+                    "Show the limit equals a finite, positive constant (L = 3).",
+                    "Conclude: 'By LCT, since the limit is finite and positive, both series converge.'"
+                ],
+                traps: "Do not use the Direct Comparison Test here. Proving that (3n^2 - n)/(n^5 + 4) is strictly less than 3/n^3 requires annoying algebra. LCT bypasses the inequality requirement.",
+                customFails: {
+                    "Direct Comparison": "DCT requires proving strict inequalities. Because of the -n in the numerator, proving it's smaller than your comparison series is algebraically brutal. Use LCT instead."
+                }
+            },
+            {
+                prompt: "Determine the convergence of:",
+                series: "\\sum_{n=1}^{\\infty} \\frac{1}{n^2}",
+                correct: "p-Series Test",
+                pattern: "This is the textbook definition of a p-series: 1 / n^p where p is a constant.",
+                frqChecklist: [
+                    "Identify the series as a p-series.",
+                    "Explicitly state the value of p (p = 2).",
+                    "State the rule: 'Since p = 2 > 1, the series converges.'"
+                ],
+                traps: "INCONCLUSIVE TRAP! Many students default to the Ratio Test for everything. If you run the Ratio Test on 1/n^2, the limit is exactly 1. The Ratio Test fails completely here.",
+                customFails: {
+                    "Ratio Test": "Try it in your head: lim (n^2 / (n+1)^2) = 1. The Ratio Test is INCONCLUSIVE when L=1. You must recognize this as a p-series."
+                }
+            },
+            {
+                prompt: "Find the Maclaurin series for:",
+                series: "f(x) = x^2 e^{3x}",
+                correct: "Taylor Series Manipulation",
+                pattern: "You are asked to generate a series for a function that is a modified version of a 'known' series (e^x). Do not build it from scratch using derivatives.",
+                frqChecklist: [
+                    "Write down the known Maclaurin series: e^x = \\sum x^n / n!.",
+                    "Substitute 3x in for x: e^{3x} = \\sum (3x)^n / n!.",
+                    "Multiply the entire series by x^2: x^2 \\sum (3^n x^n) / n!.",
+                    "Combine the x terms: \\sum (3^n x^{n+2}) / n!."
+                ],
+                traps: "If you try to use the standard Taylor formula (taking the 1st, 2nd, 3rd derivatives of x^2 e^{3x}), the product rule will cause the derivatives to explode into a massive mess. Always substitute into known series.",
+                customFails: {
+                    "Ratio Test": "This is a generation problem, not a convergence problem. You need to manipulate a known series."
+                }
+            },
+            {
+                prompt: "Determine the convergence of:",
+                series: "\\sum_{n=2}^{\\infty} \\frac{1}{n\\ln(n)}",
+                correct: "Integral Test",
+                pattern: "The function 1/(x ln x) is easily integrable using u-substitution (u = ln(x), du = 1/x dx).",
+                frqChecklist: [
+                    "Define f(x) = 1/(x ln x).",
+                    "STATE THE 3 PREREQUISITES: f(x) must be continuous, positive, and decreasing on [2, \\infty).",
+                    "Set up the improper integral with a limit: \\lim_{b \\to \\infty} \\int_2^b 1/(x ln x) dx.",
+                    "Evaluate to ln(ln(b)). As b -> \\infty, the integral goes to infinity.",
+                    "Conclude: 'Since the integral diverges, the series diverges by the Integral Test.'"
+                ],
+                traps: "FORGETTING THE PREREQUISITES! If you do the math perfectly but forget to write 'f(x) is positive, continuous, and decreasing', College Board will dock you a point on the FRQ.",
+                customFails: {
+                    "Limit Comparison": "What would you compare it to? 1/n diverges, but this is smaller than 1/n, so that tells you nothing. You must integrate."
+                }
+            }
+        ];
+
+        let currentProblemIndex = -1;
+        let activeButtons = [];
+
+        function init() {
+            const grid = document.getElementById('options-grid');
+            categories.forEach(test => {
+                const btn = document.createElement('button');
+                btn.innerText = test;
+                btn.onclick = () => handleSelection(test, btn);
+                grid.appendChild(btn);
+                activeButtons.push(btn);
+            });
+            loadNextProblem();
         }
-    ];
 
-    const practiceContainer = document.getElementById('practice-container');
+        function loadNextProblem() {
+            activeButtons.forEach(btn => {
+                btn.className = '';
+                btn.disabled = false;
+            });
+            document.getElementById('feedback-panel').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
 
-    function renderProblems() {
-        problems.forEach((prob, index) => {
-            const probDiv = document.createElement('div');
-            probDiv.className = 'problem-container';
+            let newIndex = currentProblemIndex;
+            while(newIndex === currentProblemIndex) {
+                newIndex = Math.floor(Math.random() * problems.length);
+            }
+            currentProblemIndex = newIndex;
             
-            probDiv.innerHTML = `
-                <p><strong>Problem ${index + 1}:</strong> ${prob.text}</p>
-                <span class="note">Enter as a decimal rounded to two places.</span>
-                <div class="input-group">
-                    <input type="text" id="input-${prob.id}" placeholder="e.g., 5.00">
-                    <button onclick="checkAnswer(${prob.id}, ${prob.answer})">Submit</button>
-                    <button class="btn-secondary" onclick="toggleSolution(${prob.id})">Show Solution</button>
-                    <span id="feedback-${prob.id}" class="feedback"></span>
-                </div>
-                <div id="solution-${prob.id}" class="solution-box">
-                    ${prob.solution}
-                </div>
-            `;
-            practiceContainer.appendChild(probDiv);
-        });
-
-        if (window.MathJax) {
-            MathJax.typesetPromise();
-        }
-    }
-
-    // Grading Logic
-    window.checkAnswer = function(id, correctAnswer) {
-        const inputField = document.getElementById(`input-${id}`);
-        const feedbackSpan = document.getElementById(`feedback-${id}`);
-        const userAnswer = parseFloat(inputField.value);
-
-        if (isNaN(userAnswer)) {
-            feedbackSpan.textContent = "Please enter a valid number.";
-            feedbackSpan.className = "feedback incorrect";
-            return;
+            const problem = problems[currentProblemIndex];
+            
+            const container = document.getElementById('problem-container');
+            container.innerHTML = `<span class="prompt-text">${problem.prompt || "Determine the convergence of:"}</span><div id="math-render"></div>`;
+            
+            katex.render(problem.series, document.getElementById('math-render'), {
+                displayMode: true,
+                throwOnError: false
+            });
         }
 
-        if (Math.abs(userAnswer - correctAnswer) <= 0.015) {
-            feedbackSpan.textContent = "Correct! Great job.";
-            feedbackSpan.className = "feedback correct";
-        } else {
-            feedbackSpan.textContent = "Incorrect. Try again!";
-            feedbackSpan.className = "feedback incorrect";
+        function handleSelection(selectedTest, clickedBtn) {
+            const problem = problems[currentProblemIndex];
+            const feedbackPanel = document.getElementById('feedback-panel');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackContent = document.getElementById('feedback-content');
+            const nextBtn = document.getElementById('next-btn');
+
+            activeButtons.forEach(btn => btn.disabled = true);
+            feedbackPanel.style.display = 'block';
+
+            let htmlContent = "";
+
+            if (selectedTest === problem.correct) {
+                clickedBtn.classList.add('correct');
+                feedbackTitle.style.color = 'var(--success)';
+                feedbackTitle.innerText = "System.out.println(\"Correct\"); // " + problem.correct;
+                
+                let checklistHTML = problem.frqChecklist.map(item => `<li>${item}</li>`).join('');
+                
+                htmlContent = `
+                    <div class="feedback-section">
+                        <h3>Pattern Recognition (MCQ Speed)</h3>
+                        <p>${problem.pattern}</p>
+                    </div>
+                    <div class="feedback-section">
+                        <h3>FRQ Written Protocol (Secure Full Marks)</h3>
+                        <ul class="checklist">${checklistHTML}</ul>
+                    </div>
+                    <div class="feedback-section" style="border-left: 4px solid var(--warning);">
+                        <h3 style="color: var(--warning);">⚠️ Exam Traps & Edge Cases</h3>
+                        <p>${problem.traps}</p>
+                    </div>
+                `;
+            } else {
+                clickedBtn.classList.add('incorrect');
+                const correctBtn = activeButtons.find(b => b.innerText === problem.correct);
+                if(correctBtn) correctBtn.classList.add('correct');
+
+                feedbackTitle.style.color = 'var(--error)';
+                feedbackTitle.innerText = "Error: Invalid Method Selection.";
+                
+                let failReason = problem.customFails && problem.customFails[selectedTest] 
+                    ? problem.customFails[selectedTest] 
+                    : "This test does not align with the mathematical structure of the given series.";
+
+                let checklistHTML = problem.frqChecklist.map(item => `<li>${item}</li>`).join('');
+
+                htmlContent = `
+                    <div class="feedback-section" style="border-left: 4px solid var(--error);">
+                        <h3 style="color: var(--error);">Why ${selectedTest} fails here:</h3>
+                        <p>${failReason}</p>
+                    </div>
+                    <div class="feedback-section">
+                        <h3>The Optimal Path: ${problem.correct}</h3>
+                        <p>${problem.pattern}</p>
+                    </div>
+                    <div class="feedback-section">
+                        <h3>FRQ Written Protocol</h3>
+                        <ul class="checklist">${checklistHTML}</ul>
+                    </div>
+                `;
+            }
+
+            feedbackContent.innerHTML = htmlContent;
+            nextBtn.style.display = 'block';
+            
+            // Scroll to feedback
+            feedbackPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-    };
 
-    // Toggle Solution Logic
-    window.toggleSolution = function(id) {
-        const solBox = document.getElementById(`solution-${id}`);
-        const btn = solBox.previousElementSibling.previousElementSibling; 
-        
-        if (solBox.style.display === "block") {
-            solBox.style.display = "none";
-            btn.textContent = "Show Solution";
-        } else {
-            solBox.style.display = "block";
-            btn.textContent = "Hide Solution";
-        }
-    };
-
-    renderProblems();
-
-</script>
+        window.onload = init;
+    </script>
 </body>
 </html>
